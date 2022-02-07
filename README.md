@@ -14,7 +14,7 @@ cd ${MediaWikiROOT}/extensions/
 git clone https://github.com/Dr-TSteimle/PMID.git
 ```
 
-Add the following line at the end o`⅞f ${MediaWikiROOT}/LocalSettings.php : 
+Add the following line at the end of `${MediaWikiROOT}/LocalSettings.php` : 
 
 ```
 require_once("$IP/extensions/PMID/pmid.php");
