@@ -1,16 +1,10 @@
 <?php
-/*
-Author: Thomas Steimlé
-
-Installation:
-        install this file in :
-	    ${MWROOT}/extensions/PMID/pmid.php
-	
-	
-	
-	and add the following line at the end of ${MWROOT}/LocalSettings.php :
-	require_once("$IP/extensions/PMID/pmid.php");
-*/
+/**
+ * PMID
+ * 
+ * Copyright (c) 2016 Thomas Steimlé
+ * https://github.com/Dr-TSteimle
+ */
 
 /**
  * Protect against register_globals vulnerabilities.
