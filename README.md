@@ -19,7 +19,17 @@ Add the following line at the end of `${MediaWikiROOT}/LocalSettings.php` :
 ```
 require_once("$IP/extensions/PMID/pmid.php");
 ```
+## Usage
 
+Inside the editor add the PMID number between <pmid> tag.
+  
+For example :
+```html
+  <pmid>35082269</pmid>
+```
+Gives :
+![](screen.png)
+ 
 ## :+1: Thanks
 
 Thanks to @asifr for its PubMed API client class [PHP-PubMed-API-Wrapper](https://github.com/asifr/PHP-PubMed-API-Wrapper)
