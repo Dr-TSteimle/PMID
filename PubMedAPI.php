@@ -13,42 +13,34 @@
  * Asif Rahman <asiftr@gmail.com>
  * https://github.com/asifr
  */
-
 define('PUBMEDAPI_VERSION', '1'); // Sat 10 Nov 2012
-
 class PubMedAPI
 {
 	public $retmax = 10; // Max number of results to return
 	public $retstart = 0; // The search result number to start displaying data, useful for pagination
 	public $count = 0; // Sets to the number of search results
-
 	public $use_cache = false; // Save JSON formatted search results to a text file if TRUE
 	public $cache_dir = './'; // Directory where cached results will be saved
 	public $cache_life = 604800; // Caching time, in seconds, default 7 days
 	public $cache_file_hash = ''; // Sets to the md5 hash of the search term
-
 	public $term = '';
 	public $db = 'pubmed';
 	public $retmode = 'xml';
 	public $exact_match = true; // Exact match narrows the search results by wrapping in quotes
-
 	// For accessing PubMed through proxy servers
 	static public $proxy_name = '';
 	static public $proxy_port = '';
 	static public $proxy_username = '';
 	static public $proxy_password = '';
 	static public $curl_site_url = '';
-
-	private $esearch = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?';
-	private $efetch = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?';
-
+	private $esearch = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?';
+	private $efetch = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?';
 	public function query($term, $compact = false, $callback = false)
 	{
 		$this->term = $term;
 		if ($this->exact_match) {
 			$this->term = urlencode(sprintf('"%s"',$this->term));
 		}
-
 		// Load cached results
 		if ($this->use_cache) {
 			$this->cache_file_hash = md5($term);
@@ -61,7 +53,6 @@ class PubMedAPI
 				return $data['results'];
 			}
 		}
-
 		$xml = $this->pubmed_esearch($this->term);
 		$this->count = (int)$xml->Count;
 		
@@ -74,12 +65,10 @@ class PubMedAPI
 			}
 			$results = $this->query_pmid(implode(',',$ids), $compact);
 		}
-
 		// Cache search results
 		if ($this->use_cache) {
 			$this->cache_results($term, $results);
 		}
-
 		// Custom callback methods are executed and returnd at this point.
 		// Provides a single argument: the $results array
 		if ($callback !== false) {
@@ -88,15 +77,13 @@ class PubMedAPI
 		
 		return $results;
 	}
-
 	public function query_pmid($pmid, $compact = false)
 	{
 		$XML = $this->pubmed_efetch($pmid);
 		return $this->parse($XML, $compact);
 	}
-
 	// Retuns an XML object
-	protected function pubmed_esearch($term)
+	public function pubmed_esearch($term)
 	{
 		// Setup the URL for esearch
 		$q = array();
@@ -113,9 +100,8 @@ class PubMedAPI
 		$XML = self::proxy_simplexml_load_file($url); // results of esearch, XML formatted
 		return $XML;
 	}
-
 	// Returns an XML object
-	protected function pubmed_efetch($pmid)
+	public function pubmed_efetch($pmid)
 	{
 		// Setup the URL for efetch
 		$params = array(
@@ -125,17 +111,21 @@ class PubMedAPI
 			'id'		=> (string) $pmid
 		);
 		$q = array();
+		reset($params);
+		// while (list($key, $value) = each($params)) { $q[] = $key . '=' . $value; }
 		foreach ($params as $key => $value) { $q[] = $key . '=' . $value; }
 		$httpquery = implode('&',$q);
 		$url = $this->efetch . $httpquery;
 		$XML = self::proxy_simplexml_load_file($url);
-
+		//throw new MWException( $XML->asXML() );
 		return $XML;
 	}
-
 	public function parse($xml, $compact = false)
 	{
 		$data = array();
+		//throw new MWException( $xml );
+		//reset($xml->PubmedArticle);
+		//while (list(, $art) = each($xml->PubmedArticle)) {
 		foreach ($xml->PubmedArticle as $art) {
 			if ($compact) {
 				// Compact
@@ -143,6 +133,7 @@ class PubMedAPI
 					'pmid'			=> (string) $art->MedlineCitation->PMID,
 					'volume'		=> (string)$art->MedlineCitation->Article->Journal->JournalIssue->Volume,
 					'issue'			=> (string)$art->MedlineCitation->Article->Journal->JournalIssue->Issue,
+					'pages'			=> (string)$art->MedlineCitation->Article->Journal->JournalIssue->Pages,
 					'year'			=> (string)$art->MedlineCitation->Article->Journal->JournalIssue->PubDate->Year,
 					'month'			=> (string)$art->MedlineCitation->Article->Journal->JournalIssue->PubDate->Month,
 					'journal'		=> (string) $art->MedlineCitation->Article->Journal->Title,
@@ -151,7 +142,6 @@ class PubMedAPI
 				);
 			} else {
 				// Full metadata
-
 				// Authors array contains concatendated LAST NAME + INITIALS
 				$authors = array();
 				if (isset($art->MedlineCitation->Article->AuthorList->Author)) {
@@ -164,7 +154,6 @@ class PubMedAPI
 						$authors[] = (string)$a->LastName .' '. (string)$a->Initials;
 					}
 				}
-
 				// Keywords array
 				$keywords = array();
 				if (isset($art->MedlineCitation->MeshHeadingList->MeshHeading)) {
@@ -179,7 +168,6 @@ class PubMedAPI
 						}
 					}
 				}
-
 				// Article IDs array
 				$articleid = array();
 				if (isset($art->PubmedData->ArticleIdList)) {
@@ -187,8 +175,6 @@ class PubMedAPI
 						$articleid[] = $id;
 					}
 				}
-
-
 				$data[] = array(
 					'pmid'			=> (string) $art->MedlineCitation->PMID,
 					'volume'		=> (string)$art->MedlineCitation->Article->Journal->JournalIssue->Volume,
@@ -210,33 +196,34 @@ class PubMedAPI
 		}
 		return $data;
 	}
-
 	public static function proxy_simplexml_load_file($url)
 	{		
 		$xml_string = '';
+		//throw new MWException( $url );
 		if (isset(self::$proxy_name) && !empty(self::$proxy_name)) {
 			$proxy_fp = fsockopen(self::$proxy_name, self::$proxy_port);
 			if ($proxy_fp) {
 				fputs($proxy_fp, "GET ".$url." HTTP/1.0\r\nHost: ".self::$proxy_name."\r\n");
 				fputs($proxy_fp, "User-Agent: \"$_SERVER[HTTP_USER_AGENT]\"\r\n");
 				fputs($proxy_fp, "Proxy-Authorization: Basic ".base64_encode(self::$proxy_username.":".self::$proxy_password)."\r\n\r\n");
-
 				while(!feof($proxy_fp)){
 					$xml_string .= fgets($proxy_fp, 128);
 				}
-
 				fclose($proxy_fp);
 				$xml_string = strstr($xml_string, "<?xml");
+				throw new MWException( $xml_string );
 				$xml = simplexml_load_string($xml_string);
 				#JSTOR hack
 				if (empty($xml) && strpos($url, 'jstor') !== false) {
 					$xml = new XMLReader();
+					//throw new MWException( $xml_string );
 					$xml->xml($xml_string);
 				}
 			}
 		} else {
 			ini_set('user_agent', $_SERVER['HTTP_USER_AGENT']);
 			$xml = self::load_xml_from_url($url);
+			//throw new MWException( $xml->asXML() );
 			#JSTOR hack
 			if (empty($xml) && strpos($url, 'jstor') !== false) {
 				$xml = new XMLReader();
@@ -245,38 +232,34 @@ class PubMedAPI
 		}
 		return $xml;
 	}
-
 	public static function load_file_from_url($url)
 	{
 		$curl = curl_init();
+		//throw new MWException( $url );
 		curl_setopt($curl, CURLOPT_URL, $url);
 		curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
 		curl_setopt($curl, CURLOPT_REFERER, self::$curl_site_url);
+		// curl_setopt($handle, CURLOPT_VERBOSE, true);
 		$str = curl_exec($curl);
 		curl_close($curl);
+		//throw new MWException( shell_exec( "echo 'hh' ") );
 		return $str;
 	}
-
 	public static function load_xml_from_url($url)
 	{
 		return simplexml_load_string(self::load_file_from_url($url));
 	}
-
 	// Generate the results cache PHP script
 	public function cache_results($term, $results)
 	{
 		if ($term == '')
 			return;
-
 		$this->cache_file_hash = md5($term);
-
 		$fh = @fopen($this->cache_dir.'cache_'.$this->cache_file_hash.'_'.$this->retstart.'.json', 'wb');
 		if (!$fh)
 			die('Unable to write cache file to cache directory. Please make sure PHP has write access to the directory \''.$this->cache_dir.'\'.');
-
 		fwrite($fh, json_encode(array('results' => $results, 'term' => addslashes($term), 'count' => $this->count, 'retstart' => $this->retstart)));
 		fclose($fh);
 	}
 }
-
 ?>

@@ -4,7 +4,8 @@
 
 ## :speech_balloon: Description
 
-[MediaWiki](https://www.mediawiki.org/) Extension for rendering medical reference by parsing [PubMed](https://pubmed.ncbi.nlm.nih.gov/) database.
+[MediaWiki](https://www.mediawiki.org/) extension for rendering medical reference by parsing [PubMed](https://pubmed.ncbi.nlm.nih.gov/) database. Your Mediawiki installation 
+should uses a MySQL database.
 
 
 ## :sparkles: Install
@@ -17,7 +18,7 @@ git clone https://github.com/Dr-TSteimle/PMID.git
 Add the following line at the end of `${MediaWikiROOT}/LocalSettings.php` : 
 
 ```
-require_once("$IP/extensions/PMID/pmid.php");
+wfLoadExtension( 'PMID' );
 ```
 ## Usage
 
@@ -39,7 +40,7 @@ Thanks to @asifr for its PubMed API client class [PHP-PubMed-API-Wrapper](https:
 This script is free software, available under the terms of the BSD-style open source license reproduced below, or, at your option, under the [GNU General Public License version 2](http://www.gnu.org/licenses/gpl-2.0.txt) or a later version.
 
 PMID
-Copyright © 2016 Thomas Steimlé
+Copyright © 2016-2021 Thomas Steimlé
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
